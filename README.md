@@ -171,9 +171,8 @@ demo2-ner/
 ├── README.md
 │
 ├── data/
-│   └── ner/
-│       ├── MSRA/        # MSRA 数据集
-│       └── weibo/       # Weibo 数据集
+│   ├── MSRA/        # MSRA 数据集
+│   └── weibo/       # Weibo 数据集
 │
 └── images/              # 实验结果图片
     │

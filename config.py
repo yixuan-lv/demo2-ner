@@ -20,14 +20,14 @@ class Config:
     # ========== 数据配置 ==========
     data_path = {
         "msra": {
-            "train": "data/ner/MSRA/train_5k.txt",
-            "dev": "data/ner/MSRA/dev_1k.txt",
-            "test": "data/ner/MSRA/test_1k.txt"
+            "train": "data/MSRA/train.txt",
+            "dev": "data/MSRA/dev.txt",
+            "test": "data/MSRA/test.txt"
         },
         "weibo": {
-            "train": "data/ner/weibo/train.txt",
-            "dev": "data/ner/weibo/dev.txt",
-            "test": "data/ner/weibo/test.txt"
+            "train": "data/weibo/train.txt",
+            "dev": "data/weibo/dev.txt",
+            "test": "data/weibo/test.txt"
         }
     }
 
