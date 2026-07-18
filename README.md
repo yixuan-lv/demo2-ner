@@ -158,32 +158,27 @@ Weibo 数据集来源于新浪微博。
 
 # 📁 项目结构
 
-demo2-ner/
 
-├── main.py # 程序入口，配置数据集和模型
-├── model.py # BERT + BiLSTM + CRF 模型定义
-├── trainer.py # 训练与评估逻辑
-├── data_loader.py # 数据加载与预处理
-├── utils.py # 标签映射、数据读取等工具函数
-├── config.py # 超参数配置
-├── requirements.txt # Python依赖
+demo2-ner/
+├── main.py              # 程序入口，配置数据集和模型
+├── model.py             # BERT + BiLSTM + CRF 模型定义
+├── trainer.py           # 训练与评估逻辑
+├── data_loader.py       # 数据加载与预处理
+├── utils.py             # 标签映射、数据读取等工具函数
+├── config.py            # 超参数配置
+├── requirements.txt     # Python依赖
 ├── README.md
 
 ├── data/
-│ └── ner/
-│ ├── MSRA/ # MSRA 数据集
-│ └── weibo/ # Weibo 数据集
+│   └── ner/
+│       ├── MSRA/        # MSRA 数据集
+│       └── weibo/       # Weibo 数据集
 
-└── images/ # 实验结果图片
-
-├── exp1_bert-base-msra/
-│
-├── exp2_bert-base-weibo/
-│
-├── exp3_bert-wwm-msra/
-│
-└── exp4_bert-wwm-weibo/
-
+└── images/
+    ├── exp1_bert-base-msra/
+    ├── exp2_bert-base-weibo/
+    ├── exp3_bert-wwm-msra/
+    └── exp4_bert-wwm-weibo/
 
 
 ---
