@@ -158,33 +158,34 @@ Weibo 数据集来源于新浪微博。
 
 # 📁 项目结构
 
-
+```text
 demo2-ner/
+│
 ├── main.py              # 程序入口，配置数据集和模型
 ├── model.py             # BERT + BiLSTM + CRF 模型定义
 ├── trainer.py           # 训练与评估逻辑
 ├── data_loader.py       # 数据加载与预处理
 ├── utils.py             # 标签映射、数据读取等工具函数
 ├── config.py            # 超参数配置
-├── requirements.txt     # Python依赖
+├── requirements.txt     # Python依赖列表
 ├── README.md
-
+│
 ├── data/
 │   └── ner/
 │       ├── MSRA/        # MSRA 数据集
 │       └── weibo/       # Weibo 数据集
-
-└── images/
+│
+└── images/              # 实验结果图片
+    │
     ├── exp1_bert-base-msra/
     ├── exp2_bert-base-weibo/
     ├── exp3_bert-wwm-msra/
     └── exp4_bert-wwm-weibo/
-
+```
 
 ---
 
 # ⚙️ 环境配置
-
 
 ## 创建环境
 
@@ -192,96 +193,64 @@ demo2-ner/
 conda create -n demo2 python=3.10
 
 conda activate demo2
+```
 
 安装依赖：
 
+```bash
 pip install -r requirements.txt
+```
 
-核心依赖：
+## 核心依赖
 
-软件	版本
-Python	3.10
-PyTorch	2.8.0
-Transformers	4.57.6
-seqeval	1.2.2
-torchcrf	1.1.0
-SwanLab	0.7.14
-🚀 运行方式
-
-直接运行：
-
-python main.py
-
-修改：
-
-main.py
-
-中的参数即可切换实验：
-
-dataset_name = "msra"
-
-# 可选：
-# msra
-# weibo
-
-
-model_name = "/root/demo2/bert_models/bert-base-chinese"
-
-
-# 或：
-
-# /root/demo2/bert_models/chinese-bert-wwm
-
-训练过程中会自动记录实验结果到 SwanLab。
-
-可以实时查看：
-
-loss 曲线
-F1变化
-不同实验对比
-
-# 📊 实验结果
-
-
-本项目主要进行了两类实验：
-
-1. **模型与数据集组合对比实验（2×2）**
-
-2. **学习率调优实验**
+| 软件 | 版本 |
+|---|---|
+| Python | 3.10 |
+| PyTorch | 2.8.0 |
+| Transformers | 4.57.6 |
+| seqeval | 1.2.2 |
+| torchcrf | 1.1.0 |
+| SwanLab | 0.7.14 |
 
 
 ---
 
-# 1. 核心对比实验（2×2）
+# 🚀 运行方式
+
+```bash
+python main.py
+```
+
+切换数据集或模型时，修改 `main.py` 中的参数：
+
+```python
+dataset_name = "msra"   # 可选: "msra" 或 "weibo"
+
+model_name = "/root/demo2/bert_models/bert-base-chinese"
+# 或：
+# chinese-bert-wwm
+```
+
+训练过程会自动记录到 SwanLab，可在浏览器中实时查看训练曲线和指标变化。
 
 
-实验分别测试：
+---
 
-- bert-base-chinese
-- chinese-bert-wwm
-
-
-在：
-
-- MSRA
-- Weibo
-
-两个数据集上的性能。
+# 📊 实验结果
 
 
-## 实验结果汇总
+## 1. 核心对比实验（2×2矩阵）
 
 
 | 模型 | 数据集 | 测试 F1 | 最佳验证 F1 |
-|-|-|-|-|
+|---|---|---|---|
 | bert-base-chinese | MSRA | 91.14% | 93.20% |
 | bert-base-chinese | Weibo | 69.03% | 72.39% |
 | chinese-bert-wwm | MSRA | 91.06% | 93.20% |
 | chinese-bert-wwm | Weibo | 65.86% | 70.17% |
 
 
-## 实验分析
-
+### 实验分析
 
 - 两个模型在 MSRA 数据集上表现非常接近（91.06%–91.14%），说明在该任务上两者性能相当。
 
@@ -293,40 +262,29 @@ F1变化
 
 ---
 
-# 2. 超参数调优实验
-
-
-## Weibo + bert-base-chinese
+# 2. 超参数调优实验（Weibo + bert-base-chinese）
 
 
 固定其他超参数：
 
-| 参数 | 值 |
-|-|-|
+| 参数 | 设置 |
+|---|---|
 | batch_size | 16 |
 | hidden_size | 256 |
 | dropout | 0.2 |
 
 
-仅调整：
-
-> BERT 层学习率
-
-
-实验结果如下：
-
+仅调整 BERT 层学习率：
 
 | BERT层学习率 | 测试 F1 | 最佳验证 F1 |
-|-|-|-|
+|---|---|---|
 | 1e-5 | 67.10% | 72.34% |
 | 2e-5 | 69.03% | 72.39% |
 | 3e-5 | 68.85% | 70.29% |
 | 5e-5 | 68.33% | 72.39% |
 
 
-
-## 分析
-
+### 实验分析
 
 - 学习率从 1e-5 提高到 2e-5 时，F1 上升约 2 个百分点；超过 2e-5 后，性能逐渐下降。
 
@@ -335,47 +293,35 @@ F1变化
 - 整体来看，学习率在 1e-5 到 5e-5 范围内，F1 的波动幅度在 2% 以内，模型对该区间具有一定鲁棒性。
 
 
-
 ---
-
 
 # 3. 各实验详细分类报告
 
 
----
-
-# 实验一：bert-base-chinese + MSRA
-
-## 测试 F1：91.14%
+## 实验一：bert-base-chinese + MSRA（F1: 91.14%）
 
 
 | 实体类型 | precision | recall | f1-score | support |
-|-|-|-|-|-|
+|---|---|---|---|---|
 | LOC | 0.91 | 0.91 | 0.91 | 632 |
 | ORG | 0.85 | 0.88 | 0.86 | 268 |
 | PER | 0.95 | 0.96 | 0.96 | 361 |
 | 加权平均 | 0.91 | 0.92 | 0.91 | 1261 |
 
 
+实验结果：
 
-## 实验结果可视化
-
-
-![bert-base-chinese MSRA实验结果](images/exp1_bert-base-msra_combined.png)
+![实验一 bert-base-chinese MSRA](./images/exp1_bert-base-msra_combined.png)
 
 
 
 ---
 
-
-# 实验二：bert-base-chinese + Weibo
-
-
-## 测试 F1：69.03%
+## 实验二：bert-base-chinese + Weibo（F1: 69.03%）
 
 
 | 实体类型 | precision | recall | f1-score | support |
-|-|-|-|-|-|
+|---|---|---|---|---|
 | GPE.NAM | 0.77 | 0.96 | 0.85 | 46 |
 | GPE.NOM | 0.00 | 0.00 | 0.00 | 2 |
 | LOC.NAM | 0.39 | 0.37 | 0.38 | 19 |
@@ -387,50 +333,38 @@ F1变化
 | 加权平均 | 0.68 | 0.70 | 0.69 | 412 |
 
 
+实验结果：
 
-## 实验结果可视化
-
-
-![bert-base-chinese Weibo实验结果](images/exp2_bert-base-weibo_combined.png)
+![实验二 bert-base-chinese Weibo](./images/exp2_bert-base-weibo_combined.png)
 
 
 
 ---
 
-
-# 实验三：chinese-bert-wwm + MSRA
-
-
-## 测试 F1：91.06%
+## 实验三：chinese-bert-wwm + MSRA（F1: 91.06%）
 
 
 | 实体类型 | precision | recall | f1-score | support |
-|-|-|-|-|-|
+|---|---|---|---|---|
 | LOC | 0.93 | 0.90 | 0.92 | 632 |
 | ORG | 0.86 | 0.86 | 0.86 | 268 |
 | PER | 0.93 | 0.94 | 0.94 | 361 |
 | 加权平均 | 0.92 | 0.90 | 0.91 | 1261 |
 
 
+实验结果：
 
-## 实验结果可视化
-
-
-![chinese-bert-wwm MSRA实验结果](images/exp3_bert-wwm-msra_combined.png)
+![实验三 chinese-bert-wwm MSRA](./images/exp3_bert-wwm-msra_combined.png)
 
 
 
 ---
 
-
-# 实验四：chinese-bert-wwm + Weibo
-
-
-## 测试 F1：65.86%
+## 实验四：chinese-bert-wwm + Weibo（F1: 65.86%）
 
 
 | 实体类型 | precision | recall | f1-score | support |
-|-|-|-|-|-|
+|---|---|---|---|---|
 | GPE.NAM | 0.74 | 0.87 | 0.80 | 46 |
 | GPE.NOM | 0.00 | 0.00 | 0.00 | 2 |
 | LOC.NAM | 0.25 | 0.37 | 0.30 | 19 |
@@ -442,118 +376,26 @@ F1变化
 | 加权平均 | 0.64 | 0.68 | 0.66 | 412 |
 
 
+实验结果：
 
-## 实验结果可视化
-
-
-![chinese-bert-wwm Weibo实验结果](images/exp4_bert-wwm-weibo_combined.png)
+![实验四 chinese-bert-wwm Weibo](./images/exp4_bert-wwm-weibo_combined.png)
 
 
 
 ---
 
----
-
-# 4. 关键发现
+# 🔍 关键发现
 
 
-## （1）MSRA 数据集上两种模型性能差异很小
+- MSRA 数据集上两种模型性能差异很小：F1 仅相差 0.08 个百分点，说明二者在规范文本上的表现十分接近。
 
-两个模型在 MSRA 数据集上的结果：
+- Weibo 数据集更具区分度：bert-base-chinese 优于 chinese-bert-wwm 约 3.2 个百分点，可能与预训练数据分布差异有关。
 
-- bert-base-chinese：91.14%
-- chinese-bert-wwm：91.06%
+- 人名（PER）识别效果最好：所有实验中 PER 的 F1 都是最高的。
 
+- 机构名（ORG）识别难度最大：Weibo 上 ORG.NOM 仅有 16 条训练样本，模型难以捕捉有效特征。
 
-F1 仅相差：
-
-> 0.08 个百分点
-
-
-说明二者在规范新闻文本上的表现十分接近。
-
-
-
----
-
-## （2）Weibo 数据集更具区分度
-
-
-在 Weibo 数据集上：
-
-| 模型 | F1 |
-|-|-|
-| bert-base-chinese | 69.03% |
-| chinese-bert-wwm | 65.86% |
-
-
-bert-base-chinese 优于 chinese-bert-wwm：
-
-> 约 3.2 个百分点
-
-
-可能原因：
-
-- 微博文本具有较强领域特征；
-- 预训练语料分布差异影响模型泛化能力；
-- bert-base-chinese 在该场景下具有更好的适应性。
-
-
-
----
-
-## （3）人名（PER）识别效果最好
-
-
-所有实验中：
-
-PER 类实体 F1 均保持较高水平。
-
-
-原因：
-
-- 人名边界相对明确；
-- 人名模式具有较强规律性；
-- 数据集中人名样本数量较多。
-
-
-
----
-
-## （4）机构名（ORG）识别难度最大
-
-
-Weibo 数据集中：
-
-部分机构普通名词样本数量较少。
-
-
-例如：
-
-- ORG.NOM：
-
-测试样本：
-
-> 16 条
-
-
-由于样本量不足，模型难以学习稳定特征。
-
-
----
-
-## （5）样本数量对性能影响显著
-
-
-少数类别：
-
-| 类别 | 测试样本 |
-|-|-|
-| GPE.NOM | 2 |
-| LOC.NOM | 9 |
-
-
-由于测试样本过少，模型难以获得有效统计特征，因此部分类别 F1 较低。
+- 样本量对性能影响显著：GPE.NOM（2 条）、LOC.NOM（9 条）等少数类在测试集中几乎无法被正确识别。
 
 
 ---
@@ -564,8 +406,8 @@ Weibo 数据集中：
 ## 基础超参数
 
 
-| 参数 | MSRA 实验值 | Weibo 实验值 |
-|-|-|-|
+| 参数 | MSRA实验值 | Weibo实验值 |
+|---|---|---|
 | batch_size | 32 | 16 |
 | lstm_hidden_size | 256 | 256 |
 | lstm_layers | 1 | 1 |
@@ -576,111 +418,41 @@ Weibo 数据集中：
 | max_seq_len | 128 | 128 |
 
 
-
----
-
-# 分层学习率
+## 分层学习率
 
 
-为了平衡预训练模型参数更新和下游任务学习速度，采用分层学习率策略。
-
-
-| 模块 | 学习率 |
-|-|-|
-| BERT 层 | 2e-5 |
-| BiLSTM 层 | 1e-3 |
+| 参数 | 学习率 |
+|---|---|
+| BERT层 | 2e-5 |
+| BiLSTM层 | 1e-3 |
 | 分类器层 | 1e-3 |
-| CRF 层 | 1e-3 |
-
+| CRF层 | 1e-3 |
 
 
 ---
 
-# 🖥️ 实验环境
+# 💻 实验环境
 
 
 | 项目 | 配置 |
-|-|-|
+|---|---|
 | 操作系统 | Ubuntu 22.04 |
-| 硬件 | NVIDIA GeForce RTX 5090 (32GB) |
+| GPU | NVIDIA GeForce RTX 5090 (32GB) |
 | Python | 3.10 |
 | PyTorch | 2.8.0+cu128 |
 | Transformers | 4.57.6 |
-| seqeval | 1.2.2 |
-| torchcrf | 1.1.0 |
-| SwanLab | 0.7.14 |
-
-
-
----
-
-# 📈 实验记录
-
-
-所有训练过程均通过 SwanLab 进行记录。
-
-
-包含：
-
-- Training Loss 曲线
-- Validation F1 曲线
-- 不同实验对比
-- 模型训练过程监控
-
-
-实验链接：
-
-- SwanLab 项目主页
-
-https://swanlab.cn/@Lyx1/demo2-ner
 
 
 ---
 
 # 📚 参考
 
-
-- BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding
-
 - bert-base-chinese
 
 - chinese-bert-wwm
 
-- MSRA Chinese NER Dataset
+- MSRA NER 数据集
 
-- Weibo NER Dataset
-
-- Hugging Face Transformers
-
-- PyTorch
+- Weibo NER 数据集
 
 - SwanLab 实验可视化工具
-
-
----
-
-# 🎯 总结
-
-
-本项目实现了一个完整的：
-
-> BERT + BiLSTM + CRF 中文命名实体识别系统
-
-
-通过在 MSRA 和 Weibo 两个数据集上的实验，分析了：
-
-- 不同预训练模型性能差异；
-- 不同领域文本对 NER 的影响；
-- 学习率变化对模型性能的影响；
-- 数据规模和类别分布对实体识别效果的影响。
-
-
-实验结果表明：
-
-- 在规范文本 MSRA 数据集上，两种 BERT 模型均取得较高性能；
-- 在微博场景中，bert-base-chinese 表现更优；
-- 合理的学习率设置能够有效提升模型效果；
-- 少样本类别仍然是中文 NER 任务中的主要挑战。
-
-
----
