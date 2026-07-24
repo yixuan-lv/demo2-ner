@@ -255,7 +255,7 @@ model_name = "/root/demo2/bert_models/bert-base-chinese"
 
 - Weibo 数据集的 F1 比 MSRA 低约 20 个百分点，主要原因在于社交媒体文本噪声大、实体表达不规范、网络用语频繁。
 
-- 在 Weibo 上，bert-base-chinese 比 chinese-bert-wwm 高出约 3.2 个百分点，表明在该场景下 bert-base-chinese 具有更好的泛化能力。
+- 在 Weibo 上，bert-base-chinese 比 chinese-bert-wwm 高出约 3.2 个百分点，表明在该场景下 bert-base-chinese 的领域适应性更强。
 
 
 
@@ -285,11 +285,11 @@ model_name = "/root/demo2/bert_models/bert-base-chinese"
 
 ### 实验分析
 
-- 学习率从 1e-5 提高到 2e-5 时，F1 上升约 2 个百分点；超过 2e-5 后，性能逐渐下降。
+- 学习率从 1e-5 提高到 2e-5 时，测试F1 上升约 2 个百分点；超过 2e-5 后，性能逐渐下降。
 
 - 最优学习率为 2e-5。
 
-- 整体来看，学习率在 1e-5 到 5e-5 范围内，F1 的波动幅度在 2% 以内，模型对该区间具有一定鲁棒性。
+- 整体来看，学习率在 1e-5 到 5e-5 范围内，测试 F1 的极差在 2 个百分点以内，模型对该区间具有一定鲁棒性。但验证 F1 的波动略大（极差超过 2 个百分点），说明训练过程对学习率仍较为敏感。
 
 
 ---
@@ -388,11 +388,11 @@ model_name = "/root/demo2/bert_models/bert-base-chinese"
 
 - MSRA 数据集上两种模型性能差异很小：F1 仅相差 0.08 个百分点，说明二者在规范文本上的表现十分接近。
 
-- Weibo 数据集更具区分度：bert-base-chinese 优于 chinese-bert-wwm 约 3.2 个百分点，可能与预训练数据分布差异有关。
+- Weibo 数据集更具区分度：bert-base-chinese 优于 chinese-bert-wwm 约 3.2 个百分点，表明在该场景下 bert-base-chinese 的领域适应性更强。
 
 - 人名（PER）识别效果最好：所有实验中 PER 的 F1 都是最高的。
 
-- 机构名（ORG）识别难度最大：Weibo 上 ORG.NOM 仅有 16 条训练样本，模型难以捕捉有效特征。
+- 机构名（ORG）识别难度最大：Weibo 上 ORG.NOM 的测试集支持数仅为 16 条，模型难以捕捉有效特征。
 
 - 样本量对性能影响显著：GPE.NOM（2 条）、LOC.NOM（9 条）等少数类在测试集中几乎无法被正确识别。
 
