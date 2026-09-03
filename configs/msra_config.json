@@ -1,0 +1,31 @@
+{
+    "bert_path": "/root/demo2/bert_models/bert-base-chinese",
+    "lstm_hidden_size": 256,
+    "lstm_layers": 1,
+    "dropout": 0.2,
+    "batch_size": 32,
+    "epochs": 10,
+    "warmup_ratio": 0.1,
+    "weight_decay": 0.01,
+    "max_seq_len": 128,
+    "max_grad_norm": 1.0,
+    "patience": 3,
+    "bert_lr": 2e-5,
+    "lstm_lr": 1e-3,
+    "classifier_lr": 1e-3,
+    "seed": 42,
+    "output_dir": "./results/msra",
+    "log_dir": "./logs/msra",
+    "data_path": {
+        "msra": {
+            "train": "data/ner/MSRA/train_5k.txt",
+            "dev": "data/ner/MSRA/dev_1k.txt",
+            "test": "data/ner/MSRA/test_1k.txt"
+        },
+        "weibo": {
+            "train": "data/ner/weibo/train.txt",
+            "dev": "data/ner/weibo/dev.txt",
+            "test": "data/ner/weibo/test.txt"
+        }
+    }
+}

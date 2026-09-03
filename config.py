@@ -1,36 +1,49 @@
 # config.py
+import json
 import torch
+from dataclasses import dataclass
+from typing import Dict
 
 
+@dataclass
 class Config:
-    # ========== 模型配置 ==========
-    bert_path = "/root/demo2/bert_models/bert-base-chinese"  # 或 "chinese-bert-wwm"
-    lstm_hidden_size = 256
-    lstm_layers = 1
-    dropout = 0.1
+    """配置类，从 JSON 文件加载，不写死任何参数"""
 
-    # ========== 训练配置 ==========
-    batch_size = 16
-    learning_rate = 3e-5
-    epochs = 15
-    warmup_ratio = 0.1
-    weight_decay = 0.01
-    max_seq_len = 128
+    # 所有字段都不设默认值，必须从 JSON 读取
+    bert_path: str
+    lstm_hidden_size: int
+    lstm_layers: int
+    dropout: float
+    batch_size: int
+    epochs: int
+    warmup_ratio: float
+    weight_decay: float
+    max_seq_len: int
+    max_grad_norm: float
+    patience: int
+    bert_lr: float
+    lstm_lr: float
+    classifier_lr: float
+    seed: int
+    output_dir: str
+    log_dir: str
 
-    # ========== 数据配置 ==========
-    data_path = {
-        "msra": {
-            "train": "data/MSRA/train.txt",
-            "dev": "data/MSRA/dev.txt",
-            "test": "data/MSRA/test.txt"
-        },
-        "weibo": {
-            "train": "data/weibo/train.txt",
-            "dev": "data/weibo/dev.txt",
-            "test": "data/weibo/test.txt"
-        }
-    }
+    @classmethod
+    def from_json(cls, json_path: str) -> "Config":
+        """从 JSON 文件加载配置"""
+        with open(json_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        return cls(**data)
 
-    # ========== 其他配置 ==========
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    seed = 42
+    def to_json(self, json_path: str) -> None:
+        """保存配置到 JSON 文件"""
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(self.__dict__, f, indent=4, ensure_ascii=False)
+
+    def update(self, **kwargs) -> None:
+        """更新配置参数（用于命令行覆盖）"""
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+            else:
+                raise AttributeError(f"Config has no attribute '{key}'")
