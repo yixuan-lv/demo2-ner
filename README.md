@@ -4,9 +4,9 @@
 
 模型采用：
 
-> **BERT + BiLSTM + CRF**
+> **BERT + BiLSTM + 线性分类层**
 
-结构，通过 BERT 提取上下文语义表示，BiLSTM 建模序列依赖关系，CRF 对标签转移进行全局约束，最终输出最优实体标注序列。
+结构，通过 BERT 提取上下文语义表示，BiLSTM 建模序列依赖关系，线性层输出标签概率分布，最终输出最优实体标注序列。
 
 项目使用：
 
@@ -36,12 +36,12 @@
   - Weibo NER
 
 - ✅ 完整模型结构
-  
+
   BERT
   ↓
   BiLSTM
   ↓
-  CRF
+  Linear
   ↓
   NER 标签序列
 
@@ -49,10 +49,9 @@
 
 不同模块设置不同学习率：
 
-- BERT 层
-- BiLSTM 层
-- 分类器层
-- CRF 层
+- BERT 层（2e-5）
+- BiLSTM 层（1e-3）
+- 分类器层（1e-3）
 
 - ✅ 完整实验流程
 
@@ -162,25 +161,33 @@ Weibo 数据集来源于新浪微博。
 demo2-ner/
 │
 ├── main.py              # 程序入口，配置数据集和模型
-├── model.py             # BERT + BiLSTM + CRF 模型定义
+├── model.py             # BERT + BiLSTM + Linear 模型定义
 ├── trainer.py           # 训练与评估逻辑
-├── data_loader.py       # 数据加载与预处理
-├── utils.py             # 标签映射、数据读取等工具函数
-├── config.py            # 超参数配置
+├── config.py            # 配置类（从 JSON 加载）
 ├── requirements.txt     # Python依赖列表
 ├── README.md
 │
+├── configs/
+│   ├── msra_config.json # MSRA 数据集配置
+│   └── weibo_config.json # Weibo 数据集配置
+│
+├── utils/
+│   ├── __init__.py
+│   ├── data_loader.py   # 数据加载与预处理
+│   ├── metrics.py       # 手写 NER F1 计算
+│   └── analyzer.py      # 数据统计分析
+│
 ├── data/
-│   ├── MSRA/        # MSRA 数据集
-│   └── weibo/       # Weibo 数据集
+│   ├── MSRA/            # MSRA 数据集
+│   └── weibo/           # Weibo 数据集
 │
 └── images/              # 实验结果图片
-    │
-    ├── exp1_bert-base-msra/
-    ├── exp2_bert-base-weibo/
-    ├── exp3_bert-wwm-msra/
-    └── exp4_bert-wwm-weibo/
+    ├── exp1_bert-base-msra_combined.png
+    ├── exp2_bert-base-weibo_combined.png
+    ├── exp3_bert-wwm-msra_combined.png
+    └── exp4_bert-wwm-weibo_combined.png
 ```
+
 
 ---
 
@@ -205,10 +212,8 @@ pip install -r requirements.txt
 | 软件 | 版本 |
 |---|---|
 | Python | 3.10 |
-| PyTorch | 2.8.0 |
+| PyTorch | 2.8.0+cu128 |
 | Transformers | 4.57.6 |
-| seqeval | 1.2.2 |
-| torchcrf | 1.1.0 |
 | SwanLab | 0.7.14 |
 
 
@@ -225,9 +230,7 @@ python main.py
 ```python
 dataset_name = "msra"   # 可选: "msra" 或 "weibo"
 
-model_name = "/root/demo2/bert_models/bert-base-chinese"
-# 或：
-# chinese-bert-wwm
+model_name = "bert-base-chinese"   # 可选: "bert-base-chinese" 或 "chinese-bert-wwm"
 ```
 
 训练过程会自动记录到 SwanLab，可在浏览器中实时查看训练曲线和指标变化。
@@ -243,25 +246,27 @@ model_name = "/root/demo2/bert_models/bert-base-chinese"
 
 | 模型 | 数据集 | 测试 F1 | 最佳验证 F1 |
 |---|---|---|---|
-| bert-base-chinese | MSRA | 91.14% | 93.20% |
-| bert-base-chinese | Weibo | 69.03% | 72.39% |
-| chinese-bert-wwm | MSRA | 91.06% | 93.20% |
-| chinese-bert-wwm | Weibo | 65.86% | 70.17% |
+| bert-base-chinese | MSRA | 90.28% | 91.44% |
+| bert-base-chinese | Weibo | 69.24% | 73.23% |
+| chinese-bert-wwm | MSRA | 86.96% | 89.07% |
+| chinese-bert-wwm | Weibo | 67.16% | 72.87% |
 
 
 ### 实验分析
 
-- 两个模型在 MSRA 数据集上表现非常接近（91.06%–91.14%），说明在该任务上两者性能相当。
+- bert-base-chinese 在两个数据集上均优于 chinese-bert-wwm：MSRA 上高出约 3.32 个百分点，Weibo 上高出约 2.08 个百分点，表明在该任务上 bert-base-chinese 的适应性更强。
 
-- Weibo 数据集的 F1 比 MSRA 低约 20 个百分点，主要原因在于社交媒体文本噪声大、实体表达不规范、网络用语频繁。
+- Weibo 数据集的 F1 比 MSRA 低约 21-22 个百分点，主要原因在于社交媒体文本噪声大、实体表达不规范、网络用语频繁。
 
-- 在 Weibo 上，bert-base-chinese 比 chinese-bert-wwm 高出约 3.2 个百分点，表明在该场景下 bert-base-chinese 的领域适应性更强。
+- 在 MSRA 上，BERT + BiLSTM + Linear 已达到 90%+ F1，说明移除 CRF 后性能依然优秀。
+
+- 在 Weibo 上，移除 CRF 后性能基本持平（69.24% vs 第一版 69.03%），说明 CRF 在噪声数据上帮助有限。
 
 
 
 ---
 
-# 2. 超参数调优实验（Weibo + bert-base-chinese）
+## 2. 超参数调优实验（Weibo + bert-base-chinese）
 
 
 固定其他超参数：
@@ -277,35 +282,38 @@ model_name = "/root/demo2/bert_models/bert-base-chinese"
 
 | BERT层学习率 | 测试 F1 | 最佳验证 F1 |
 |---|---|---|
-| 1e-5 | 67.10% | 72.34% |
-| 2e-5 | 69.03% | 72.39% |
-| 3e-5 | 68.85% | 70.29% |
-| 5e-5 | 68.33% | 72.39% |
+| 1e-5 | 66.91% | 73.10% |
+| **2e-5** | **69.24%** | **73.23%** |
+| 3e-5 | 68.67% | 72.77% |
+| 5e-5 | 67.52% | 71.95% |
 
 
 ### 实验分析
 
-- 学习率从 1e-5 提高到 2e-5 时，测试F1 上升约 2 个百分点；超过 2e-5 后，性能逐渐下降。
+- 学习率从 1e-5 提高到 2e-5 时，测试 F1 上升约 **2.33 个百分点**（66.91% → 69.24%），提升明显；超过 2e-5 后，性能逐渐下降，3e-5 和 5e-5 的测试 F1 分别下降 0.57 和 1.72 个百分点。
 
-- 最优学习率为 2e-5。
+- **最优学习率为 2e-5**，验证集和测试集表现最平衡，泛化能力最好。
 
-- 整体来看，学习率在 1e-5 到 5e-5 范围内，测试 F1 的极差在 2 个百分点以内，模型对该区间具有一定鲁棒性。但验证 F1 的波动略大（极差超过 2 个百分点），说明训练过程对学习率仍较为敏感。
+- 1e-5 时验证 F1（73.10%）与测试 F1（66.91%）差距最大（4.19 个百分点），说明学习率偏小时模型在验证集上过拟合，泛化能力较弱。
+
+- 5e-5 时训练较早触发 Early Stopping（第 8 轮），表明学习率过大导致训练不稳定，模型难以充分收敛。
+
 
 
 ---
 
-# 3. 各实验详细分类报告
+## 3. 各实验详细分类报告
 
 
-## 实验一：bert-base-chinese + MSRA（F1: 91.14%）
+### 实验一：bert-base-chinese + MSRA（F1: 90.28%）
 
 
 | 实体类型 | precision | recall | f1-score | support |
 |---|---|---|---|---|
-| LOC | 0.91 | 0.91 | 0.91 | 632 |
-| ORG | 0.85 | 0.88 | 0.86 | 268 |
-| PER | 0.95 | 0.96 | 0.96 | 361 |
-| 加权平均 | 0.91 | 0.92 | 0.91 | 1261 |
+| LOC | 0.9019 | 0.9019 | 0.9019 | 632 |
+| ORG | 0.8582 | 0.8812 | 0.8696 | 261 |
+| PER | 0.9363 | 0.9210 | 0.9286 | 367 |
+| 加权平均 | 0.9025 | 0.9032 | 0.9028 | 1260 |
 
 
 实验结果：
@@ -316,20 +324,20 @@ model_name = "/root/demo2/bert_models/bert-base-chinese"
 
 ---
 
-## 实验二：bert-base-chinese + Weibo（F1: 69.03%）
+### 实验二：bert-base-chinese + Weibo（F1: 69.24%）
 
 
 | 实体类型 | precision | recall | f1-score | support |
 |---|---|---|---|---|
-| GPE.NAM | 0.77 | 0.96 | 0.85 | 46 |
-| GPE.NOM | 0.00 | 0.00 | 0.00 | 2 |
-| LOC.NAM | 0.39 | 0.37 | 0.38 | 19 |
-| LOC.NOM | 0.43 | 0.33 | 0.38 | 9 |
-| ORG.NAM | 0.40 | 0.46 | 0.43 | 39 |
-| ORG.NOM | 0.78 | 0.44 | 0.56 | 16 |
-| PER.NAM | 0.78 | 0.78 | 0.78 | 112 |
-| PER.NOM | 0.70 | 0.73 | 0.72 | 169 |
-| 加权平均 | 0.68 | 0.70 | 0.69 | 412 |
+| GPE.NAM | 0.8913 | 0.7885 | 0.8367 | 52 |
+| GPE.NOM | 0.0000 | 0.0000 | 0.0000 | 0 |
+| LOC.NAM | 0.1579 | 0.3750 | 0.2222 | 8 |
+| LOC.NOM | 0.1111 | 0.3333 | 0.1667 | 3 |
+| ORG.NAM | 0.4615 | 0.5143 | 0.4865 | 35 |
+| ORG.NOM | 0.5000 | 0.7273 | 0.5926 | 11 |
+| PER.NAM | 0.7727 | 0.7798 | 0.7763 | 109 |
+| PER.NOM | 0.7305 | 0.6893 | 0.7093 | 177 |
+| 加权平均 | 0.6814 | 0.7038 | 0.6924 | 395 |
 
 
 实验结果：
@@ -340,15 +348,15 @@ model_name = "/root/demo2/bert_models/bert-base-chinese"
 
 ---
 
-## 实验三：chinese-bert-wwm + MSRA（F1: 91.06%）
+### 实验三：chinese-bert-wwm + MSRA（F1: 86.96%）
 
 
 | 实体类型 | precision | recall | f1-score | support |
 |---|---|---|---|---|
-| LOC | 0.93 | 0.90 | 0.92 | 632 |
-| ORG | 0.86 | 0.86 | 0.86 | 268 |
-| PER | 0.93 | 0.94 | 0.94 | 361 |
-| 加权平均 | 0.92 | 0.90 | 0.91 | 1261 |
+| LOC | 0.8956 | 0.8830 | 0.8892 | 641 |
+| ORG | 0.8172 | 0.8588 | 0.8375 | 255 |
+| PER | 0.9003 | 0.8207 | 0.8587 | 396 |
+| 加权平均 | 0.8803 | 0.8591 | 0.8696 | 1292 |
 
 
 实验结果：
@@ -359,20 +367,20 @@ model_name = "/root/demo2/bert_models/bert-base-chinese"
 
 ---
 
-## 实验四：chinese-bert-wwm + Weibo（F1: 65.86%）
+### 实验四：chinese-bert-wwm + Weibo（F1: 67.16%）
 
 
 | 实体类型 | precision | recall | f1-score | support |
 |---|---|---|---|---|
-| GPE.NAM | 0.74 | 0.87 | 0.80 | 46 |
-| GPE.NOM | 0.00 | 0.00 | 0.00 | 2 |
-| LOC.NAM | 0.25 | 0.37 | 0.30 | 19 |
-| LOC.NOM | 0.29 | 0.22 | 0.25 | 9 |
-| ORG.NAM | 0.44 | 0.44 | 0.44 | 39 |
-| ORG.NOM | 0.64 | 0.44 | 0.52 | 16 |
-| PER.NAM | 0.70 | 0.75 | 0.72 | 112 |
-| PER.NOM | 0.70 | 0.72 | 0.71 | 169 |
-| 加权平均 | 0.64 | 0.68 | 0.66 | 412 |
+| GPE.NAM | 0.8478 | 0.7358 | 0.7879 | 53 |
+| GPE.NOM | 0.0000 | 0.0000 | 0.0000 | 0 |
+| LOC.NAM | 0.2632 | 0.3846 | 0.3125 | 13 |
+| LOC.NOM | 0.4444 | 0.6667 | 0.5333 | 6 |
+| ORG.NAM | 0.4103 | 0.5714 | 0.4776 | 28 |
+| ORG.NOM | 0.3750 | 0.6667 | 0.4800 | 9 |
+| PER.NAM | 0.7545 | 0.6917 | 0.7217 | 120 |
+| PER.NOM | 0.7246 | 0.6760 | 0.6994 | 179 |
+| 加权平均 | 0.6716 | 0.6716 | 0.6716 | 408 |
 
 
 实验结果：
@@ -386,15 +394,17 @@ model_name = "/root/demo2/bert_models/bert-base-chinese"
 # 🔍 关键发现
 
 
-- MSRA 数据集上两种模型性能差异很小：F1 仅相差 0.08 个百分点，说明二者在规范文本上的表现十分接近。
+- bert-base-chinese 在两个数据集上均优于 chinese-bert-wwm：MSRA 上高出约 3.32 个百分点，Weibo 上高出约 2.08 个百分点，表明在该任务上 bert-base-chinese 的适应性更强。
 
-- Weibo 数据集更具区分度：bert-base-chinese 优于 chinese-bert-wwm 约 3.2 个百分点，表明在该场景下 bert-base-chinese 的领域适应性更强。
+- MSRA 数据集的 F1 远高于 Weibo（差距约 21-22 个百分点），说明新闻文本的 NER 任务明显比社交媒体文本容易。
+
+- 在 MSRA 上，移除 CRF 后性能依然优秀（90%+ F1），说明 BERT + BiLSTM + Linear 结构在规范文本上已足够强大。
 
 - 人名（PER）识别效果最好：所有实验中 PER 的 F1 都是最高的。
 
-- 机构名（ORG）识别难度最大：Weibo 上 ORG.NOM 的测试集支持数仅为 16 条，模型难以捕捉有效特征。
+- 机构名（ORG）识别难度最大：Weibo 上 ORG 的 F1 在 0.48-0.59 之间，远低于 PER 和 GPE。
 
-- 样本量对性能影响显著：GPE.NOM（2 条）、LOC.NOM（9 条）等少数类在测试集中几乎无法被正确识别。
+- 样本量对性能影响显著：LOC.NAM（8 条）、LOC.NOM（3 条）等少数类在测试集中识别效果较差，说明数据稀缺对模型性能影响明显。
 
 
 ---
@@ -425,7 +435,6 @@ model_name = "/root/demo2/bert_models/bert-base-chinese"
 | BERT层 | 2e-5 |
 | BiLSTM层 | 1e-3 |
 | 分类器层 | 1e-3 |
-| CRF层 | 1e-3 |
 
 
 ---
