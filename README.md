@@ -174,7 +174,7 @@ demo2-ner/
 ├── utils/
 │   ├── __init__.py
 │   ├── data_loader.py   # 数据加载与预处理
-│   ├── metrics.py       # 手写 NER F1 计算
+│   ├── metrics.py       # NER F1 计算
 │   └── analyzer.py      # 数据统计分析
 │
 ├── data/
@@ -201,22 +201,24 @@ conda create -n demo2 python=3.10
 conda activate demo2
 ```
 
-安装依赖：
+安装 PyTorch
+注意：本项目使用 RTX 5090 显卡，需要 PyTorch 2.8.0+ 及 CUDA 12.8 支持。
 
-```bash
+针对 RTX 50 系显卡（CUDA 12.8）：
+
+bash
+pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cu128
+如果你的显卡不是 RTX 50 系或 CUDA 版本不同，请根据 PyTorch 官网 的指引选择合适的安装命令。
+
+安装其他依赖
+bash
 pip install -r requirements.txt
-```
-
-## 核心依赖
-
-| 软件 | 版本 |
-|---|---|
-| Python | 3.10 |
-| PyTorch | 2.8.0+cu128 |
-| Transformers | 4.57.6 |
-| SwanLab | 0.7.14 |
-
-
+核心依赖
+软件	版本
+Python	3.10
+PyTorch	2.8.0+cu128
+Transformers	4.57.6
+SwanLab	0.7.14
 ---
 
 # 🚀 运行方式
