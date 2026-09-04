@@ -213,13 +213,16 @@ pip install torch==2.8.0 torchvision==0.23.0 torchaudio==2.8.0 --index-url https
 安装其他依赖
 bash
 pip install -r requirements.txt
+
 核心依赖
 软件	版本
 Python	3.10
 PyTorch	2.8.0+cu128
 Transformers	4.57.6
 SwanLab	0.7.14
+
 ---
+
 
 # 🚀 运行方式
 
