@@ -27,6 +27,7 @@ class Config:
     seed: int
     output_dir: str
     log_dir: str
+    data_path: dict
 
     @classmethod
     def from_json(cls, json_path: str) -> "Config":

@@ -114,7 +114,7 @@ def main():
     # ============================================================
 
     dataset_name = "weibo"  # 可选: "msra" 或 "weibo"
-    model_name = "bert-base-chinese"  # 可选: "bert-base-chinese" 或 "chinese-bert-wwm"
+    model_name = "chinese-bert-wwm"  # 可选: "bert-base-chinese" 或 "chinese-bert-wwm"
 
     model_path = f"./bert_models/{model_name}"
 

@@ -19,7 +19,6 @@ from .data_loader import (
 )
 
 from .metrics import (
-    extract_entities,
     compute_ner_f1,
     compute_ner_classification_report,
     get_ner_f1_score,
@@ -41,7 +40,6 @@ __all__ = [
     'create_dataloader',
     'analyze_data_statistics',
     # metrics
-    'extract_entities',
     'compute_ner_f1',
     'compute_ner_classification_report',
     'get_ner_f1_score',

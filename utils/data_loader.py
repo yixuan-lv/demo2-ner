@@ -120,7 +120,7 @@ def load_ner_data(data_path: str, tokenizer: PreTrainedTokenizer,
             is_split_into_words=True,
             truncation=True,
             max_length=max_len,
-            padding="False"
+            padding='do_not_pad'
         )
 
         input_ids = encoding["input_ids"]

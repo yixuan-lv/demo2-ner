@@ -2,8 +2,9 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import List, Tuple
-from .data_loader import read_raw_data
+from typing import List, Tuple, Dict
+from collections import Counter
+from .data_loader import load_bio_data  # ✅ 改这里：read_raw_data → load_bio_data
 
 
 def analyze_seq_lengths(data_path: str, save_path: str = None) -> dict:
@@ -17,7 +18,7 @@ def analyze_seq_lengths(data_path: str, save_path: str = None) -> dict:
     返回:
         包含统计信息的字典
     """
-    sentences, _ = read_raw_data(data_path)
+    sentences, _ = load_bio_data(data_path)  
     lengths = [len(s) for s in sentences]
 
     stats = {
@@ -69,14 +70,13 @@ def analyze_label_distribution(data_path: str) -> dict:
     返回:
         标签统计信息
     """
-    sentences, labels = read_raw_data(data_path)
+    sentences, labels = load_bio_data(data_path)
 
     # 统计所有标签
     all_labels = []
     for seq_labels in labels:
         all_labels.extend(seq_labels)
 
-    from collections import Counter
     label_counts = Counter(all_labels)
     total = sum(label_counts.values())
 

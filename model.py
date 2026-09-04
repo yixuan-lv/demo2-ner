@@ -94,17 +94,16 @@ class NERModel(nn.Module):
         result = {'logits': logits}
 
         # ===== 5. 训练时计算损失 =====
+        # 不管有没有 labels，都计算 predictions
+        predictions = torch.argmax(logits, dim=-1)
+        result['predictions'] = predictions
+
         if labels is not None:
             loss = self.loss_fn(
-                logits.view(-1, self.num_labels),  # [batch*seq_len, num_labels]
-                labels.view(-1)  # [batch*seq_len]
+                logits.view(-1, self.num_labels),
+                labels.view(-1)
             )
             result['loss'] = loss
-
-        # ===== 6. 推理时获取预测 =====
-        else:
-            predictions = torch.argmax(logits, dim=-1)  # [batch, seq_len]
-            result['predictions'] = predictions
 
         return result
 
