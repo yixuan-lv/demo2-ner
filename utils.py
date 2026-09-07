@@ -4,13 +4,12 @@ from __future__ import annotations
 
 import logging
 import random
-from typing import Dict, List, Mapping, Sequence
+from typing import Dict, List, Mapping
 
 import numpy as np
 import torch
 
 logger = logging.getLogger(__name__)
-from seqeval.metrics import classification_report, f1_score, precision_score, recall_score
 
 
 def set_seed(seed: int) -> None:
@@ -50,6 +49,13 @@ class NERMetrics:
     def compute(self) -> Dict[str, object]:
         if not self.targets:
             raise RuntimeError("No batches have been added to NERMetrics")
+        try:
+            from seqeval.metrics import classification_report, f1_score, precision_score, recall_score
+        except ImportError as exc:
+            raise RuntimeError(
+                "seqeval is required to compute NER metrics; install dependencies with "
+                "`pip install -r requirements.txt`."
+            ) from exc
         return {
             "precision": float(precision_score(self.targets, self.predictions)),
             "recall": float(recall_score(self.targets, self.predictions)),
