@@ -1,5 +1,3 @@
---
-
 # 基于 BERT 的中文命名实体识别（NER）实验
 
 本项目基于 **PyTorch** 和 **Hugging Face Transformers** 框架，实现了一个完整的中文命名实体识别系统。
