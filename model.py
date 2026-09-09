@@ -36,14 +36,14 @@ class NERModel(nn.Module):
         self.num_labels = num_labels
         self.id2label = id2label
 
-        # ===== 1. BERT 编码器 =====
+        #1. BERT 编码器
         self.bert = AutoModel.from_pretrained(config.bert_path)
         bert_hidden_size = self.bert.config.hidden_size
 
-        # ===== 2. Dropout =====
+        #2. Dropout
         self.dropout = nn.Dropout(config.dropout)
 
-        # ===== 3. BiLSTM =====
+        #3. BiLSTM
         self.bilstm = nn.LSTM(
             input_size=bert_hidden_size,
             hidden_size=config.lstm_hidden_size,
@@ -54,13 +54,13 @@ class NERModel(nn.Module):
         )
         lstm_output_size = config.lstm_hidden_size * 2  # 双向
 
-        # ===== 4. 线性分类层 =====
+        #4. 线性分类层
         self.classifier = nn.Linear(lstm_output_size, num_labels)
 
-        # ===== 5. 损失函数 =====
+        #5. 损失函数
         self.loss_fn = nn.CrossEntropyLoss(ignore_index=-100)
 
-        print(f"✅ 模型初始化完成")
+        print(f"   模型初始化完成")
         print(f"   BERT: {config.bert_path}")
         print(f"   BiLSTM: {config.lstm_hidden_size} (双向)")
         print(f"   标签数: {num_labels}")
@@ -78,22 +78,22 @@ class NERModel(nn.Module):
         返回:
             dict: 包含 loss, logits, predictions
         """
-        # ===== 1. BERT 编码 =====
+        #1. BERT 编码
         outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask)
         sequence_output = outputs.last_hidden_state  # [batch, seq_len, hidden]
 
-        # ===== 2. Dropout =====
+        #2. Dropout
         sequence_output = self.dropout(sequence_output)
 
-        # ===== 3. BiLSTM =====
+        #3. BiLSTM
         lstm_output, _ = self.bilstm(sequence_output)  # [batch, seq_len, lstm_hidden*2]
 
-        # ===== 4. 分类 =====
+        #4. 分类
         logits = self.classifier(lstm_output)  # [batch, seq_len, num_labels]
 
         result = {'logits': logits}
 
-        # ===== 5. 训练时计算损失 =====
+        #5. 训练时计算损失
         # 不管有没有 labels，都计算 predictions
         predictions = torch.argmax(logits, dim=-1)
         result['predictions'] = predictions
