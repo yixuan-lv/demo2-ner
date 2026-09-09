@@ -23,6 +23,69 @@ else:
 logger = logging.getLogger(__name__)
 
 
+class DataCollator:
+    """Pad tokenized samples and their token-level labels."""
+
+    def __init__(
+        self,
+        tokenizer: PreTrainedTokenizerBase,
+        padding: bool | str = True,
+        max_length: Optional[int] = None,
+        pad_to_multiple_of: Optional[int] = None,
+        label_pad_token_id: int = -100,
+        return_tensors: str = "pt",
+    ) -> None:
+        self.tokenizer = tokenizer
+        self.padding = padding
+        self.max_length = max_length
+        self.pad_to_multiple_of = pad_to_multiple_of
+        self.label_pad_token_id = label_pad_token_id
+        self.return_tensors = return_tensors
+
+    def __call__(self, features: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
+        if not features:
+            raise ValueError("DataCollator received an empty batch")
+
+        label_name = "labels" if "labels" in features[0] else "label"
+        labels = [feature[label_name] for feature in features] if label_name in features[0] else None
+        model_features = [dict(feature) for feature in features]
+        if labels is not None:
+            for feature in model_features:
+                feature.pop(label_name, None)
+
+        batch = self.tokenizer.pad(
+            model_features,
+            padding=self.padding,
+            max_length=self.max_length,
+            pad_to_multiple_of=self.pad_to_multiple_of,
+            return_tensors=self.return_tensors,
+        )
+        if labels is None:
+            return batch
+
+        input_ids = batch["input_ids"]
+        sequence_length = input_ids.shape[1] if hasattr(input_ids, "shape") else len(input_ids[0])
+        padding_side = getattr(self.tokenizer, "padding_side", "right")
+        padded_labels = []
+        for label in labels:
+            values = label.detach().cpu().tolist() if torch.is_tensor(label) else list(label)
+            pad_size = sequence_length - len(values)
+            if pad_size < 0:
+                raise ValueError("A label sequence is longer than the padded input sequence")
+            padding_values = [self.label_pad_token_id] * pad_size
+            padded_labels.append(values + padding_values if padding_side == "right" else padding_values + values)
+
+        if self.return_tensors == "pt":
+            batch[label_name] = torch.tensor(padded_labels, dtype=torch.long)
+        elif self.return_tensors == "np":
+            import numpy as np
+
+            batch[label_name] = np.asarray(padded_labels, dtype=np.int64)
+        else:
+            batch[label_name] = padded_labels
+        return batch
+
+
 class NERDataModule(Dataset):
     """Combined BIO dataset and data-module implementation."""
 
@@ -83,9 +146,7 @@ class NERDataModule(Dataset):
         )
 
     def _build_collator(self):
-        from transformers import DataCollatorForTokenClassification
-
-        return DataCollatorForTokenClassification(
+        return DataCollator(
             tokenizer=self.tokenizer,
             padding=True,
             label_pad_token_id=-100,
