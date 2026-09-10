@@ -1,40 +1,30 @@
-"""BIO data loading, tokenisation and batching for NER training.
-
-``NERDataModule`` deliberately combines the old dataset and data-module
-responsibilities.  It owns the parsed/tokenised samples for every split and
-exposes the usual ``*_dataloader`` helpers, while still implementing the
-``Dataset`` protocol for the training split.
-"""
+"""BIO data loading, tokenisation and batching for NER training."""
 
 from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 import torch
 from torch.utils.data import DataLoader, Dataset
+from transformers import PreTrainedTokenizerBase
 
-if TYPE_CHECKING:
-    from transformers import PreTrainedTokenizerBase
-else:
-    PreTrainedTokenizerBase = Any
+from utils import load_bio_data
 
 logger = logging.getLogger(__name__)
 
 
 class DataCollator:
-    """Pad tokenized samples and their token-level labels."""
 
     def __init__(
         self,
-        tokenizer: PreTrainedTokenizerBase,
-        padding: bool | str = True,
-        max_length: Optional[int] = None,
-        pad_to_multiple_of: Optional[int] = None,
-        label_pad_token_id: int = -100,
-        return_tensors: str = "pt",
-    ) -> None:
+        tokenizer,
+        padding=True,
+        max_length=None,
+        pad_to_multiple_of=None,
+        label_pad_token_id=-100,
+        return_tensors="pt",
+    ):
         self.tokenizer = tokenizer
         self.padding = padding
         self.max_length = max_length
@@ -42,7 +32,7 @@ class DataCollator:
         self.label_pad_token_id = label_pad_token_id
         self.return_tensors = return_tensors
 
-    def __call__(self, features: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
+    def __call__(self, features):
         if not features:
             raise ValueError("DataCollator received an empty batch")
 
@@ -79,7 +69,6 @@ class DataCollator:
             batch[label_name] = torch.tensor(padded_labels, dtype=torch.long)
         elif self.return_tensors == "np":
             import numpy as np
-
             batch[label_name] = np.asarray(padded_labels, dtype=np.int64)
         else:
             batch[label_name] = padded_labels
@@ -87,18 +76,10 @@ class DataCollator:
 
 
 class NERDataModule(Dataset):
-    """Combined BIO dataset and data-module implementation."""
 
     REQUIRED_SPLITS = ("train", "dev", "test")
 
-    def __init__(
-        self,
-        data_paths: Mapping[str, str],
-        tokenizer: PreTrainedTokenizerBase,
-        batch_size: int,
-        max_length: int,
-        num_workers: int = 0,
-    ) -> None:
+    def __init__(self, data_paths, tokenizer, batch_size, max_length, num_workers=0):
         missing = [split for split in self.REQUIRED_SPLITS if not data_paths.get(split)]
         if missing:
             raise ValueError(f"Missing data paths for: {', '.join(missing)}")
@@ -109,14 +90,14 @@ class NERDataModule(Dataset):
         self.max_length = max_length
         self.num_workers = num_workers
         self.label2id, self.id2label = self._build_label_mappings(self.data_paths["train"])
-        self.datasets: Dict[str, List[Dict[str, List[int]]]] = {}
+        self.datasets = {}
         self._collator = self._build_collator()
 
     @property
-    def num_labels(self) -> int:
+    def num_labels(self):
         return len(self.label2id)
 
-    def setup(self) -> None:
+    def setup(self):
         self.datasets = {split: self._load_split(path) for split, path in self.data_paths.items()
                          if split in self.REQUIRED_SPLITS}
         logger.info(
@@ -124,16 +105,16 @@ class NERDataModule(Dataset):
             *(len(self.datasets[split]) for split in self.REQUIRED_SPLITS),
         )
 
-    def train_dataloader(self) -> DataLoader:
+    def train_dataloader(self):
         return self._dataloader("train", shuffle=True)
 
-    def dev_dataloader(self) -> DataLoader:
+    def dev_dataloader(self):
         return self._dataloader("dev", shuffle=False)
 
-    def test_dataloader(self) -> DataLoader:
+    def test_dataloader(self):
         return self._dataloader("test", shuffle=False)
 
-    def _dataloader(self, split: str, shuffle: bool) -> DataLoader:
+    def _dataloader(self, split, shuffle):
         if split not in self.datasets:
             raise RuntimeError("Call setup() before requesting a data loader")
         return DataLoader(
@@ -153,17 +134,21 @@ class NERDataModule(Dataset):
             return_tensors="pt",
         )
 
-    def _load_split(self, data_path: str) -> List[Dict[str, List[int]]]:
+    def _load_split(self, data_path):
         path = Path(data_path)
         sentences, labels = self.read_bio(path)
         if not sentences:
             raise ValueError(f"No valid samples found in {path}")
 
-        samples: List[Dict[str, List[int]]] = []
+        samples = []
         for words, tags in zip(sentences, labels):
-            encoding = self.tokenizer(words, is_split_into_words=True,
-                                      truncation=True, max_length=self.max_length,
-                                      padding=False)
+            encoding = self.tokenizer(
+                words,
+                is_split_into_words=True,
+                truncation=True,
+                max_length=self.max_length,
+                padding=False,
+            )
             samples.append({
                 "input_ids": encoding["input_ids"],
                 "attention_mask": encoding["attention_mask"],
@@ -171,22 +156,24 @@ class NERDataModule(Dataset):
             })
 
         lengths = [len(sentence) for sentence in sentences]
-        logger.info("%s: %d samples, average length %.2f, max length %d, %d over max_length=%d",
-                    path.name, len(samples), sum(lengths) / len(lengths), max(lengths),
-                    sum(length > self.max_length for length in lengths), self.max_length)
+        logger.info(
+            "%s: %d samples, average length %.2f, max length %d, %d over max_length=%d",
+            path.name, len(samples), sum(lengths) / len(lengths), max(lengths),
+            sum(length > self.max_length for length in lengths), self.max_length,
+        )
         return samples
 
-    def __len__(self) -> int:
+    def __len__(self):
         return len(self.datasets.get("train", ()))
 
-    def __getitem__(self, index: int) -> Dict[str, List[int]]:
+    def __getitem__(self, index):
         if "train" not in self.datasets:
             raise RuntimeError("Call setup() before requesting a sample")
         return self.datasets["train"][index]
 
     @staticmethod
-    def _build_label_mappings(train_path: str) -> Tuple[Dict[str, int], Dict[int, str]]:
-        _, sequences = NERDataModule.read_bio(train_path)
+    def _build_label_mappings(train_path):
+        _, sequences = load_bio_data(train_path)
         unique_labels = {label for sequence in sequences for label in sequence}
         ordered_labels = (["O"] if "O" in unique_labels else []) + sorted(unique_labels - {"O"})
         if not ordered_labels:
@@ -194,6 +181,46 @@ class NERDataModule(Dataset):
         label2id = {label: index for index, label in enumerate(ordered_labels)}
         return label2id, {index: label for label, index in label2id.items()}
 
+    @staticmethod
+    def read_bio(path):
+        """读取 BIO 文件，返回 (sentences, labels)"""
+        sentences = []
+        labels = []
+        cur_words = []
+        cur_labels = []
+        with open(path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    if cur_words:
+                        sentences.append(cur_words)
+                        labels.append(cur_labels)
+                        cur_words = []
+                        cur_labels = []
+                else:
+                    parts = line.split()
+                    if len(parts) == 2:
+                        cur_words.append(parts[0])
+                        cur_labels.append(parts[1])
+        if cur_words:
+            sentences.append(cur_words)
+            labels.append(cur_labels)
+        return sentences, labels
 
-# Backwards-compatible import for callers of the former two-class API.
+    @staticmethod
+    def _align_labels(word_ids, tags, label2id):
+        """将标签与 tokenizer 分词后的 token 对齐"""
+        label_ids = []
+        previous_word_idx = None
+        for word_idx in word_ids:
+            if word_idx is None:
+                label_ids.append(-100)
+            elif word_idx != previous_word_idx:
+                label_ids.append(label2id.get(tags[word_idx], 0))
+            else:
+                label_ids.append(-100)
+            previous_word_idx = word_idx
+        return label_ids
+
+
 NERDataset = NERDataModule
