@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Dict, Tuple
 
 import swanlab
 import torch
@@ -22,14 +21,14 @@ logger = logging.getLogger(__name__)
 class Trainer:
     def __init__(
         self,
-        model: nn.Module,
+        model,
         config,
-        device: torch.device,
-        train_loader: DataLoader,
-        dev_loader: DataLoader,
-        test_loader: DataLoader,
-        id2label: Dict[int, str],
-    ) -> None:
+        device,
+        train_loader,
+        dev_loader,
+        test_loader,
+        id2label,
+    ):
         self.model = model.to(device)
         self.config = config
         self.device = device
@@ -57,7 +56,7 @@ class Trainer:
         self.best_model_state = None
         os.makedirs(config.output_dir, exist_ok=True)
 
-    def train_epoch(self, epoch: int) -> float:
+    def train_epoch(self, epoch):
         self.model.train()
         total_loss = 0.0
         progress = tqdm(self.train_loader, desc=f"Epoch {epoch + 1}/{self.config.epochs}")
@@ -81,7 +80,7 @@ class Trainer:
 
         return total_loss / len(self.train_loader)
 
-    def evaluate(self, dataloader: DataLoader, desc: str = "Evaluating") -> Dict[str, Any]:
+    def evaluate(self, dataloader, desc="Evaluating"):
         self.model.eval()
         self.metrics.reset()
         total_loss = 0.0
@@ -97,7 +96,7 @@ class Trainer:
         results["loss"] = total_loss / len(dataloader) if len(dataloader) else 0.0
         return results
 
-    def train(self) -> Tuple[float, str]:
+    def train(self):
         for epoch in range(self.config.epochs):
             train_loss = self.train_epoch(epoch)
             dev_results = self.evaluate(self.dev_loader, desc="Validating")
@@ -143,7 +142,7 @@ class Trainer:
         self._save_model("final_model")
         return float(test_results["f1"]), str(test_results["report"])
 
-    def _save_model(self, name: str) -> None:
+    def _save_model(self, name):
         save_path = os.path.join(self.config.output_dir, f"{name}.pt")
         torch.save(
             {
@@ -156,7 +155,7 @@ class Trainer:
         )
         logger.info("Saved model to %s", save_path)
 
-    def load_model(self, model_path: str):
+    def load_model(self, model_path):
         checkpoint = torch.load(model_path, map_location=self.device)
         self.model.load_state_dict(checkpoint["model_state_dict"])
         self.model.to(self.device)

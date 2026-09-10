@@ -30,18 +30,18 @@ class Config:
     data_path: dict
 
     @classmethod
-    def from_json(cls, json_path: str) -> "Config":
+    def from_json(cls, json_path):
         """从 JSON 文件加载配置"""
         with open(json_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
         return cls(**data)
 
-    def to_json(self, json_path: str) -> None:
+    def to_json(self, json_path):
         """保存配置到 JSON 文件"""
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(self.__dict__, f, indent=4, ensure_ascii=False)
 
-    def update(self, **kwargs) -> None:
+    def update(self, **kwargs):
         """更新配置参数（用于命令行覆盖）"""
         for key, value in kwargs.items():
             if hasattr(self, key):

@@ -34,7 +34,7 @@ class DataCollator:
 
     def __call__(self, features):
         if not features:
-            raise ValueError("DataCollator received an empty batch")
+            raise ValueError("空的 batch")
 
         label_name = "labels" if "labels" in features[0] else "label"
         labels = [feature[label_name] for feature in features] if label_name in features[0] else None
@@ -61,7 +61,7 @@ class DataCollator:
             values = label.detach().cpu().tolist() if torch.is_tensor(label) else list(label)
             pad_size = sequence_length - len(values)
             if pad_size < 0:
-                raise ValueError("A label sequence is longer than the padded input sequence")
+                raise ValueError("标签序列比输入序列还长")
             padding_values = [self.label_pad_token_id] * pad_size
             padded_labels.append(values + padding_values if padding_side == "right" else padding_values + values)
 
@@ -80,9 +80,9 @@ class NERDataModule(Dataset):
     REQUIRED_SPLITS = ("train", "dev", "test")
 
     def __init__(self, data_paths, tokenizer, batch_size, max_length, num_workers=0):
-        missing = [split for split in self.REQUIRED_SPLITS if not data_paths.get(split)]
-        if missing:
-            raise ValueError(f"Missing data paths for: {', '.join(missing)}")
+        for split in self.REQUIRED_SPLITS:
+            if not data_paths.get(split):
+                raise ValueError(f"缺少 {split} 的数据路径")
 
         self.data_paths = dict(data_paths)
         self.tokenizer = tokenizer
@@ -116,7 +116,7 @@ class NERDataModule(Dataset):
 
     def _dataloader(self, split, shuffle):
         if split not in self.datasets:
-            raise RuntimeError("Call setup() before requesting a data loader")
+            raise RuntimeError("请先调用 setup()")
         return DataLoader(
             self.datasets[split],
             batch_size=self.batch_size,
@@ -138,7 +138,7 @@ class NERDataModule(Dataset):
         path = Path(data_path)
         sentences, labels = self.read_bio(path)
         if not sentences:
-            raise ValueError(f"No valid samples found in {path}")
+            raise ValueError(f"{path} 中没有有效样本")
 
         samples = []
         for words, tags in zip(sentences, labels):
@@ -168,7 +168,7 @@ class NERDataModule(Dataset):
 
     def __getitem__(self, index):
         if "train" not in self.datasets:
-            raise RuntimeError("Call setup() before requesting a sample")
+            raise RuntimeError("请先调用 setup()")
         return self.datasets["train"][index]
 
     @staticmethod
@@ -177,7 +177,7 @@ class NERDataModule(Dataset):
         unique_labels = {label for sequence in sequences for label in sequence}
         ordered_labels = (["O"] if "O" in unique_labels else []) + sorted(unique_labels - {"O"})
         if not ordered_labels:
-            raise ValueError(f"No labels found in training data: {train_path}")
+            raise ValueError(f"{train_path} 中没有找到标签")
         label2id = {label: index for index, label in enumerate(ordered_labels)}
         return label2id, {index: label for label, index in label2id.items()}
 
