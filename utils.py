@@ -1,4 +1,3 @@
-
 import random
 
 import numpy as np
@@ -9,6 +8,48 @@ def set_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
+
+
+def load_bio_data(file_path):
+    """读取 BIO 格式数据"""
+    sentences = []
+    labels = []
+    cur_words = []
+    cur_labels = []
+
+    with open(file_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                if cur_words:
+                    sentences.append(cur_words)
+                    labels.append(cur_labels)
+                    cur_words = []
+                    cur_labels = []
+            else:
+                parts = line.split()
+                if len(parts) == 2:
+                    cur_words.append(parts[0])
+                    cur_labels.append(parts[1])
+
+    if cur_words:
+        sentences.append(cur_words)
+        labels.append(cur_labels)
+
+    return sentences, labels
+
+
+def extract_entities(labels):
+    entities = set()
+    for start, label in enumerate(labels):
+        if not label.startswith("B-"):
+            continue
+        entity_type = label[2:]
+        end = start
+        while end + 1 < len(labels) and labels[end + 1] == f"I-{entity_type}":
+            end += 1
+        entities.add((entity_type, start, end))
+    return entities
 
 
 class NERMetrics:
@@ -33,19 +74,9 @@ class NERMetrics:
         for sentence, (target, prediction) in enumerate(zip(self.targets, self.predictions)):
             targets.update((sentence, *entity) for entity in extract_entities(target))
             predictions.update((sentence, *entity) for entity in extract_entities(prediction))
-        total = len(targets) + len(predictions)
-        f1 = 2 * len(targets & predictions) / total
-        return {"f1": f1, "report": f"Entity-level F1: {f1:.4f}"}
-
-
-def extract_entities(labels):
-    entities = set()
-    for start, label in enumerate(labels):
-        if not label.startswith("B-"):
-            continue
-        entity_type = label[2:]
-        end = start
-        while end + 1 < len(labels) and labels[end + 1] == f"I-{entity_type}":
-            end += 1
-        entities.add((entity_type, start, end))
-    return entities
+        correct = len(targets & predictions)
+        precision = correct / len(predictions) if predictions else 0
+        recall = correct / len(targets) if targets else 0
+        f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0
+        report = f"precision: {precision:.4f}, recall: {recall:.4f}, f1: {f1:.4f}"
+        return {"precision": precision, "recall": recall, "f1": f1, "report": report}
