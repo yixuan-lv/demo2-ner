@@ -206,17 +206,17 @@ model_name = "bert-base-chinese"   # 可选: "bert-base-chinese" 或 "chinese-be
 
 | 模型 | 数据集 | 测试 F1 | 最高验证 F1 |
 |---|---|---|---|
-| chinese-bert-wwm | MSRA | **91.64%** | 92.97% |
-| bert-base-chinese | MSRA | **91.34%** | 92.26% |
-| bert-base-chinese | Weibo | **67.96%** | 71.99% |
-| chinese-bert-wwm | Weibo | **64.88%** | 70.47% |
+| chinese-bert-wwm | MSRA | **90.36%** | 92.91% |
+| bert-base-chinese | MSRA | **90.27%** | 91.84% |
+| bert-base-chinese | Weibo | **69.43%** | 73.51% |
+| chinese-bert-wwm | Weibo | **66.67%** | 72.59% |
 
 #### 实验分析
 
-- `chinese-bert-wwm` 在 MSRA 上优于 `bert-base-chinese`，高出约 0.30 个百分点。
-- 在 Weibo 上，`bert-base-chinese` 优于 `chinese-bert-wwm`，高出约 3.08 个百分点，说明 `bert-base-chinese` 在社交媒体文本上适应性更好。
-- MSRA 远容易于 Weibo：差距约 23-26 个百分点，验证了社交媒体文本的 NER 难度远大于规范新闻文本。
-- 在 MSRA 上，`BERT + BiLSTM + Linear` 已达到 91%+ F1，说明该结构在规范文本上已足够强大。
+- `chinese-bert-wwm` 在 MSRA 上略优于 `bert-base-chinese`，高出约 0.09 个百分点。
+- 在 Weibo 上，`bert-base-chinese` 明显优于 `chinese-bert-wwm`，高出约 2.76 个百分点，说明 `bert-base-chinese` 在社交媒体文本上适应性更好。
+- MSRA 远容易于 Weibo：差距约 21 个百分点，验证了社交媒体文本的 NER 难度远大于规范新闻文本。
+- 在 MSRA 上，`BERT + BiLSTM + Linear` 已达到 90%+ F1，说明该结构在规范文本上已足够强大。
 
 
 ### 2. 超参数调优实验（Weibo + bert-base-chinese）
@@ -233,46 +233,46 @@ model_name = "bert-base-chinese"   # 可选: "bert-base-chinese" 或 "chinese-be
 
 | BERT 层学习率 | 测试 F1 | 最高验证 F1 |
 |---|---|---|
-| 1e-5 | 64.26% | 72.82% |
-| 2e-5 | 66.42% | 71.85% |
-| **3e-5** | **67.96%** | **71.99%** |
-| 5e-5 | 67.59% | 71.95% |
+| 1e-5 | 66.91% | 74.34% |
+| 2e-5 | 67.95% | 73.70% |
+| **3e-5** | **69.43%** | 73.51% |
+| 5e-5 | 67.59% | 74.23% |
 
 #### 实验分析
 
-- 学习率从 1e-5 提高到 3e-5 时，测试 F1 上升约 **3.70 个百分点**（64.26% → 67.96%），提升显著。
+- 学习率从 1e-5 提高到 3e-5 时，测试 F1 上升约 **2.52 个百分点**（66.91% → 69.43%），提升显著。
 - **最优学习率为 3e-5**，验证集和测试集表现最平衡，泛化能力最好。
-- 超过 3e-5 后，性能趋于稳定但略有下降，5e-5 的测试 F1 比 3e-5 低 0.37 个百分点。
-- 1e-5 时验证 F1（72.82%）与测试 F1（64.26%）差距最大（8.56 个百分点），说明学习率偏小时模型在验证集上过拟合，泛化能力较弱。
+- 超过 3e-5 后，性能略有下降，5e-5 的测试 F1 比 3e-5 低 1.84 个百分点。
+- 1e-5 时验证 F1（74.34%）与测试 F1（66.91%）差距最大（7.43 个百分点），说明学习率偏小时模型在验证集上过拟合，泛化能力较弱。
 
 
 ### 3. 各实验详细分类报告
 
-#### 实验一：chinese-bert-wwm + MSRA（测试 F1: 91.64%）
+#### 实验一：chinese-bert-wwm + MSRA（测试 F1: 90.36%）
 
 | 实体类型 | precision | recall | f1-score | support |
 |---|---|---|---|---|
 | LOC | 0.9257 | 0.9066 | 0.9161 | 632 |
 | ORG | 0.8773 | 0.8806 | 0.8790 | 268 |
 | PER | 0.9421 | 0.9474 | 0.9448 | 361 |
-| **Entity-level Micro Precision / Recall / F1** | **0.9201** | **0.9128** | **0.9164** | 1261 |
+| **Entity-level Micro P/R/F1** | **0.9079** | **0.8993** | **0.9036** | 1261 |
 
 ![实验一](./images/exp1_bert-base-msra_combined.png)
 
 
-#### 实验二：bert-base-chinese + MSRA（测试 F1: 91.34%）
+#### 实验二：bert-base-chinese + MSRA（测试 F1: 90.27%）
 
 | 实体类型 | precision | recall | f1-score | support |
 |---|---|---|---|---|
 | LOC | 0.9159 | 0.9130 | 0.9144 | 632 |
 | ORG | 0.8535 | 0.8694 | 0.8614 | 268 |
 | PER | 0.9452 | 0.9557 | 0.9504 | 361 |
-| **Entity-level Micro Precision / Recall / F1** | **0.9109** | **0.9159** | **0.9134** | 1261 |
+| **Entity-level Micro P/R/F1** | **0.9045** | **0.9009** | **0.9027** | 1261 |
 
 ![实验二](./images/exp2_bert-base-weibo_combined.png)
 
 
-#### 实验三：bert-base-chinese + Weibo（测试 F1: 67.96%）
+#### 实验三：bert-base-chinese + Weibo（测试 F1: 69.43%）
 
 | 实体类型 | precision | recall | f1-score | support |
 |---|---|---|---|---|
@@ -284,12 +284,12 @@ model_name = "bert-base-chinese"   # 可选: "bert-base-chinese" 或 "chinese-be
 | ORG.NOM | 0.4545 | 0.3125 | 0.3704 | 16 |
 | PER.NAM | 0.7500 | 0.7232 | 0.7364 | 112 |
 | PER.NOM | 0.6798 | 0.7160 | 0.6974 | 169 |
-| **Entity-level Micro Precision / Recall / F1** | **0.6796** | **0.6796** | **0.6796** | 412 |
+| **Entity-level Micro P/R/F1** | **0.7132** | **0.6765** | **0.6943** | 412 |
 
 ![实验三](./images/exp3_bert-wwm-msra_combined.png)
 
 
-#### 实验四：chinese-bert-wwm + Weibo（测试 F1: 64.88%）
+#### 实验四：chinese-bert-wwm + Weibo（测试 F1: 66.67%）
 
 | 实体类型 | precision | recall | f1-score | support |
 |---|---|---|---|---|
@@ -301,7 +301,7 @@ model_name = "bert-base-chinese"   # 可选: "bert-base-chinese" 或 "chinese-be
 | ORG.NOM | 0.5625 | 0.5625 | 0.5625 | 16 |
 | PER.NAM | 0.6667 | 0.7143 | 0.6897 | 112 |
 | PER.NOM | 0.6630 | 0.7101 | 0.6857 | 169 |
-| **Entity-level Micro Precision / Recall / F1** | **0.6247** | **0.6748** | **0.6488** | 412 |
+| **Entity-level Micro P/R/F1** | **0.6618** | **0.6716** | **0.6667** | 412 |
 
 ![实验四](./images/exp4_bert-wwm-weibo_combined.png)
 
@@ -310,9 +310,9 @@ model_name = "bert-base-chinese"   # 可选: "bert-base-chinese" 或 "chinese-be
 
 ## 🔍 关键发现
 
-- 在 MSRA 上，`chinese-bert-wwm` 优于 `bert-base-chinese`，高出约 0.30 个百分点；在 Weibo 上，`bert-base-chinese` 优于 `chinese-bert-wwm`，高出约 3.08 个百分点。
-- MSRA 远容易于 Weibo：F1 差距约 23-26 个百分点，验证了新闻文本与社交媒体文本的难度差异。
-- 在 MSRA 上，`BERT + BiLSTM + Linear` 已达到 91%+ F1，说明该结构在规范文本上已足够强大。
+- 在 MSRA 上，`chinese-bert-wwm` 优于 `bert-base-chinese`，高出约 0.09 个百分点；在 Weibo 上，`bert-base-chinese` 优于 `chinese-bert-wwm`，高出约 2.76 个百分点。
+- MSRA 远容易于 Weibo：F1 差距约 21 个百分点，验证了新闻文本与社交媒体文本的难度差异。
+- 在 MSRA 上，`BERT + BiLSTM + Linear` 已达到 90%+ F1，说明该结构在规范文本上已足够强大。
 - 人名（PER）识别效果最好：所有实验中 PER 的 F1 都是最高的。
 - 机构名（ORG）识别难度最大：Weibo 上 ORG 的 F1 在 0.37-0.56 之间，远低于 PER 和 GPE。
 - 样本量对性能影响显著：LOC.NOM、GPE.NOM 等少数类在测试集中样本极少，识别效果较差。
