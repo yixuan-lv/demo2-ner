@@ -42,9 +42,18 @@ def load_bio_data(file_path):
 def extract_entities(labels):
     entities = set()
     for start, label in enumerate(labels):
-        if not label.startswith("B-"):
+        if label.startswith("B-"):
+            entity_type = label[2:]
+        elif label.startswith("I-"):
+            entity_type = label[2:]
+            # I-* 前面没有同类型实体时，按 B-* 处理
+            if start > 0 and labels[start - 1] in {
+                f"B-{entity_type}",
+                f"I-{entity_type}"
+            }:
+                continue
+        else:
             continue
-        entity_type = label[2:]
         end = start
         while end + 1 < len(labels) and labels[end + 1] == f"I-{entity_type}":
             end += 1

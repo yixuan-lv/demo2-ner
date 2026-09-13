@@ -53,7 +53,19 @@ class NERModel(nn.Module):
         sequence_output = self.dropout(sequence_output)
 
         # BiLSTM
-        lstm_output, _ = self.bilstm(sequence_output)
+        lengths = attention_mask.sum(dim=1).cpu()
+        packed_input = torch.nn.utils.rnn.pack_padded_sequence(
+            sequence_output,
+            lengths,
+            batch_first=True,
+            enforce_sorted=False
+        )
+        packed_output, _ = self.bilstm(packed_input)
+        lstm_output, _ = torch.nn.utils.rnn.pad_packed_sequence(
+            packed_output,
+            batch_first=True,
+            total_length=sequence_output.size(1)
+        )
 
         # 分类
         logits = self.classifier(lstm_output)

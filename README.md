@@ -255,7 +255,7 @@ model_name = "bert-base-chinese"   # 可选: "bert-base-chinese" 或 "chinese-be
 | LOC | 0.9257 | 0.9066 | 0.9161 | 632 |
 | ORG | 0.8773 | 0.8806 | 0.8790 | 268 |
 | PER | 0.9421 | 0.9474 | 0.9448 | 361 |
-| **加权平均** | **0.9201** | **0.9128** | **0.9164** | 1261 |
+| **Entity-level Micro Precision / Recall / F1** | **0.9201** | **0.9128** | **0.9164** | 1261 |
 
 ![实验一](./images/exp1_bert-base-msra_combined.png)
 
@@ -267,7 +267,7 @@ model_name = "bert-base-chinese"   # 可选: "bert-base-chinese" 或 "chinese-be
 | LOC | 0.9159 | 0.9130 | 0.9144 | 632 |
 | ORG | 0.8535 | 0.8694 | 0.8614 | 268 |
 | PER | 0.9452 | 0.9557 | 0.9504 | 361 |
-| **加权平均** | **0.9109** | **0.9159** | **0.9134** | 1261 |
+| **Entity-level Micro Precision / Recall / F1** | **0.9109** | **0.9159** | **0.9134** | 1261 |
 
 ![实验二](./images/exp2_bert-base-weibo_combined.png)
 
@@ -284,7 +284,7 @@ model_name = "bert-base-chinese"   # 可选: "bert-base-chinese" 或 "chinese-be
 | ORG.NOM | 0.4545 | 0.3125 | 0.3704 | 16 |
 | PER.NAM | 0.7500 | 0.7232 | 0.7364 | 112 |
 | PER.NOM | 0.6798 | 0.7160 | 0.6974 | 169 |
-| **加权平均** | **0.6796** | **0.6796** | **0.6796** | 412 |
+| **Entity-level Micro Precision / Recall / F1** | **0.6796** | **0.6796** | **0.6796** | 412 |
 
 ![实验三](./images/exp3_bert-wwm-msra_combined.png)
 
@@ -301,7 +301,7 @@ model_name = "bert-base-chinese"   # 可选: "bert-base-chinese" 或 "chinese-be
 | ORG.NOM | 0.5625 | 0.5625 | 0.5625 | 16 |
 | PER.NAM | 0.6667 | 0.7143 | 0.6897 | 112 |
 | PER.NOM | 0.6630 | 0.7101 | 0.6857 | 169 |
-| **加权平均** | **0.6247** | **0.6748** | **0.6488** | 412 |
+| **Entity-level Micro Precision / Recall / F1** | **0.6247** | **0.6748** | **0.6488** | 412 |
 
 ![实验四](./images/exp4_bert-wwm-weibo_combined.png)
 
